@@ -50,6 +50,9 @@ function Player(position, canvas) {
      case ' ':
         self.fired = true;
         break;
+    case 't'
+        self.teleport = true;
+        break;
     }
   }
 
@@ -70,6 +73,9 @@ function Player(position, canvas) {
     case ' ':
         self.fired = false;
         break;
+    case 't'
+        self.teleport = true;
+        break;
     }
   }
 }
@@ -80,7 +86,14 @@ function Player(position, canvas) {
  * @function updates the player object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Player.prototype.update = function(time) {
+Player.prototype.update = function(time, canvas) {
+
+  if(this.teleport)
+  {
+    var newX = Math.floor(Math.random() * canvas.width + 1);
+    var newY = Math.floor(Math.random() * canvas.height + 1);
+    this.pisition = {x:newX, y:newY};
+  }
   // Apply angular velocity
   if(this.steerLeft) {
     this.angle += 0.1;

@@ -39,7 +39,7 @@ masterLoop(performance.now());
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
-  player.update(elapsedTime);
+  player.update(elapsedTime, canvas);
   astroid.update(elapsedTime);
   if(player.fired)
   {
