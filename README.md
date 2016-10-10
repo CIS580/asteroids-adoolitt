@@ -8,7 +8,7 @@ You will be building a clone of Asteroids, where the purpose is to pilot a ship 
 
 You may use the art provided, or your own.  Additionally, you do not need to make your game concern asteroids - as long as the core game mechanic is the same, feel free to explore.
 
-1. Your game should involve steering a player's ship around space.  Should you move off-screen, your player should wrap back on-screen on the opposite side (10 points).
+1. Your game should involve steering a player's ship around space.  Should you move off-screen, your player should wrap back on-screen on the opposite side (10 points). Done
 
 2. You should render a significant number (at least ten) asteroids on screen.  If all asteroids are destroyed, a new level with more asteroids is begun (10 points).
 
@@ -22,7 +22,7 @@ You may use the art provided, or your own.  Additionally, you do not need to mak
 
 7. A laser will break an asteroid into two or more smaller pieces when it hits them.  These pieces have part of the original asteroid's mass, and velocities that move away from each other. If an asteroid is small enough, it is simply destroyed. (20 points).
 
-8. The player's score, level, and lives are displayed on the game screen in some fashion - either through the _drawText()_ method or via an HTML element overlayed on the game screen.  Instructions on how to play the game appear in some easily-accessible fashion, i.e. on the page, or over the game screen accessed with the _esc_ key (10 points).
+8. The player's score, level, and lives are displayed on the game screen in some fashion - either through the _drawText()_ method or via an HTML element overlayed on the game screen.  Instructions on how to play the game appear in some easily-accessible fashion, i.e. on the page, or over the game screen accessed with the _esc_ key (10 points).Done
 
 ### Extra Credit
 

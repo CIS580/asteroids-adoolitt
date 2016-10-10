@@ -29,9 +29,11 @@ function Player(position, canvas) {
   this.thrusting = false;
   this.steerLeft = false;
   this.steerRight = false;
+  this.fired = false;
 
   var self = this;
   window.onkeydown = function(event) {
+    console.log(event.key);
     switch(event.key) {
       case 'ArrowUp': // up
       case 'w':
@@ -44,6 +46,9 @@ function Player(position, canvas) {
       case 'ArrowRight': // right
       case 'd':
         self.steerRight = true;
+        break;
+     case ' ':
+        self.fired = true;
         break;
     }
   }
@@ -62,6 +67,9 @@ function Player(position, canvas) {
       case 'd':
         self.steerRight = false;
         break;
+    case ' ':
+        self.fired = false;
+        break;
     }
   }
 }
@@ -75,7 +83,7 @@ function Player(position, canvas) {
 Player.prototype.update = function(time) {
   // Apply angular velocity
   if(this.steerLeft) {
-    this.angle += time * 0.005;
+    this.angle += 0.1;
   }
   if(this.steerRight) {
     this.angle -= 0.1;

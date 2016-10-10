@@ -4,12 +4,21 @@
 /* Classes */
 const Game = require('./game.js');
 const Player = require('./player.js');
-
+const Astroid = require('./astroid.js');
+const Lazer = require('./lazer.js');
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var player = new Player({x: canvas.width/2, y: canvas.height/2}, canvas);
 
+var astroid = new Astroid({x: 100 , y:100}, canvas, 200);
+var lazer;
+
+var lives = 3;
+var score = 0;
+var level = 1;
+
+var firedLazer = new Audio('assets/firedLazer.wav');
 /**
  * @function masterLoop
  * Advances the game in sync with the refresh rate of the screen
@@ -32,6 +41,14 @@ masterLoop(performance.now());
  */
 function update(elapsedTime) {
   player.update(elapsedTime);
+  astroid.update(elapsedTime);
+  if(player.fired)
+  {
+    lazer = new Lazer({x: player.x , y: player.y}, canvas, {x: player.veloity.x, y: player.veloity.y});
+    firedLazer.play();
+  }
+
+  //lazer.update(elapsedTime);
   // TODO: Update the game objects
 }
 
@@ -45,10 +62,96 @@ function update(elapsedTime) {
 function render(elapsedTime, ctx) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "white";
+  ctx.fillText("Score:" + score, canvas.width - 80, 10);
+  ctx.fillText("Level:" + level, 10, 10);
+  ctx.fillText("Lives:" + lives, canvas.width / 2, 10);
   player.render(elapsedTime, ctx);
+  astroid.render(elapsedTime, ctx);
+  lazer.render(elapsedTime,ctx);
+  ;
 }
 
-},{"./game.js":2,"./player.js":3}],2:[function(require,module,exports){
+},{"./astroid.js":2,"./game.js":3,"./lazer.js":4,"./player.js":5}],2:[function(require,module,exports){
+"use strict";
+
+const MS_PER_FRAME = 1000/8;
+
+/**
+ * @module exports the Player class
+ */
+module.exports = exports = Astroid;
+
+/**
+ * @constructor Player
+ * Creates a new player object
+ * @param {Postition} position object specifying an x and y
+ */
+function Astroid(position, canvas, mass) {
+  this.worldWidth = canvas.width;
+  this.worldHeight = canvas.height;
+  this.spritesheet  = new Image();
+  this.spritesheet.src = encodeURI('assets/big_astroid.png');
+  this.position = {
+    x: position.x,
+    y: position.y
+  };
+  this.velocity = {
+    x: 0,
+    y: 0
+  }
+  this.angle = 0;
+  this.radius  = 32;
+  this.height = 64;
+  this.width = 64;
+  this.broken = false;
+  this.mass = mass;
+}
+
+Astroid.prototype.setAngularVelocity = function(time)
+{
+  this.angle = Math.floor(Math.random() * 360 + 1);
+  var acceleration = {
+    x: Math.sin(this.angle),
+    y: Math.cos(this.angle)
+  }
+  this.velocity.x -= acceleration.x;
+  this.velocity.y -= acceleration.y;
+}
+
+/**
+ * @function updates the player object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Astroid.prototype.update = function(time) {
+
+  // Apply velocity
+  this.position.x += this.velocity.x;
+  this.position.y += this.velocity.y;
+  // Wrap around the screen
+  if(this.position.x < 0) this.position.x += this.worldWidth;
+  if(this.position.x > this.worldWidth) this.position.x -= this.worldWidth;
+  if(this.position.y < 0) this.position.y += this.worldHeight;
+  if(this.position.y > this.worldHeight) this.position.y -= this.worldHeight;
+}
+
+/**
+ * @function renders the player into the provided context
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+Astroid.prototype.render = function(time, ctx) {
+  ctx.drawImage(
+        // image
+        this.spritesheet,
+        // source rectangle
+        0, 0, this.width, this.height,
+        // destination rectangle
+        this.x, this.y, this.width, this.height
+      );
+  }
+
+},{}],3:[function(require,module,exports){
 "use strict";
 
 /**
@@ -106,7 +209,66 @@ Game.prototype.loop = function(newTime) {
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
+"use strict";
+
+const MS_PER_FRAME = 1000/8;
+
+/**
+ * @module exports the Player class
+ */
+module.exports = exports = Lazer;
+
+/**
+ * @constructor Player
+ * Creates a new player object
+ * @param {Postition} position object specifying an x and y
+ */
+function Lazer(position, canvas, velocity) {
+  this.worldWidth = canvas.width;
+  this.worldHeight = canvas.height;
+  this.spritesheet  = new Image();
+  this.spritesheet.src = encodeURI('assets/lazer.png');
+  this.position = {
+    x: position.x,
+    y: position.y
+  };
+  this.velocity = {
+    x: velocity.x,
+    y: velocity.y
+  }
+  this.angle = 0;
+  this.height = 64;
+  this.width = 20;
+}
+/**
+ * @function updates the player object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Lazer.prototype.update = function(time) {
+
+  // Apply velocity
+  this.position.x += this.velocity.x;
+  this.position.y += this.velocity.y;
+}
+
+/**
+ * @function renders the player into the provided context
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+Lazer.prototype.render = function(time, ctx) {
+  ctx.drawImage(
+        // image
+        this.spritesheet,
+        // source rectangle
+        0, 0, this.width, this.height,
+        // destination rectangle
+        this.x, this.y, this.width, this.height
+      );
+  }
+
+},{}],5:[function(require,module,exports){
 "use strict";
 
 const MS_PER_FRAME = 1000/8;
@@ -138,9 +300,11 @@ function Player(position, canvas) {
   this.thrusting = false;
   this.steerLeft = false;
   this.steerRight = false;
+  this.fired = false;
 
   var self = this;
   window.onkeydown = function(event) {
+    console.log(event.key);
     switch(event.key) {
       case 'ArrowUp': // up
       case 'w':
@@ -153,6 +317,9 @@ function Player(position, canvas) {
       case 'ArrowRight': // right
       case 'd':
         self.steerRight = true;
+        break;
+     case ' ':
+        self.fired = true;
         break;
     }
   }
@@ -171,6 +338,9 @@ function Player(position, canvas) {
       case 'd':
         self.steerRight = false;
         break;
+    case ' ':
+        self.fired = false;
+        break;
     }
   }
 }
@@ -184,7 +354,7 @@ function Player(position, canvas) {
 Player.prototype.update = function(time) {
   // Apply angular velocity
   if(this.steerLeft) {
-    this.angle += time * 0.005;
+    this.angle += 0.1;
   }
   if(this.steerRight) {
     this.angle -= 0.1;
