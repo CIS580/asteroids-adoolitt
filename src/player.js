@@ -47,10 +47,10 @@ function Player(position, canvas) {
       case 'd':
         self.steerRight = true;
         break;
-     case ' ':
+     case 'f':
         self.fired = true;
         break;
-    case 't'
+    case 't':
         self.teleport = true;
         break;
     }
@@ -70,10 +70,10 @@ function Player(position, canvas) {
       case 'd':
         self.steerRight = false;
         break;
-    case ' ':
+    case 'f':
         self.fired = false;
         break;
-    case 't'
+    case 't':
         self.teleport = true;
         break;
     }
@@ -92,7 +92,8 @@ Player.prototype.update = function(time, canvas) {
   {
     var newX = Math.floor(Math.random() * canvas.width + 1);
     var newY = Math.floor(Math.random() * canvas.height + 1);
-    this.pisition = {x:newX, y:newY};
+    this.position = {x:newX, y:newY};
+    this.teleport = false;
   }
   // Apply angular velocity
   if(this.steerLeft) {

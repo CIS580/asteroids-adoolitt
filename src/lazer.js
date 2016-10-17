@@ -12,7 +12,7 @@ module.exports = exports = Lazer;
  * Creates a new player object
  * @param {Postition} position object specifying an x and y
  */
-function Lazer(position, canvas, velocity) {
+function Lazer(position, canvas, velocity, angle) {
   this.worldWidth = canvas.width;
   this.worldHeight = canvas.height;
   this.spritesheet  = new Image();
@@ -25,9 +25,9 @@ function Lazer(position, canvas, velocity) {
     x: velocity.x,
     y: velocity.y
   }
-  this.angle = 0;
-  this.height = 64;
-  this.width = 20;
+  this.angle = angle;
+  this.height = 30;
+  this.width = 30;
 }
 /**
  * @function updates the player object
@@ -35,6 +35,12 @@ function Lazer(position, canvas, velocity) {
  */
 Lazer.prototype.update = function(time) {
 
+  var acceleration = {
+    x: Math.sin(this.angle),
+    y: Math.cos(this.angle)
+  }
+  this.velocity.x -= acceleration.x;
+  this.velocity.y -= acceleration.y;
   // Apply velocity
   this.position.x += this.velocity.x;
   this.position.y += this.velocity.y;
@@ -46,12 +52,16 @@ Lazer.prototype.update = function(time) {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Lazer.prototype.render = function(time, ctx) {
+  //ctx.save();
+  //ctx.translate(this.position.x, this.position.y);
+  //ctx.rotate(-this.angle);
   ctx.drawImage(
         // image
         this.spritesheet,
         // source rectangle
         0, 0, this.width, this.height,
         // destination rectangle
-        this.x, this.y, this.width, this.height
+        this.position.x, this.position.y, this.width, this.height
       );
+  //ctx.restore();
   }

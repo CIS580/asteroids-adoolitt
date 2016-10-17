@@ -12,13 +12,13 @@ You may use the art provided, or your own.  Additionally, you do not need to mak
 
 2. You should render a significant number (at least ten) asteroids on screen.  If all asteroids are destroyed, a new level with more asteroids is begun (10 points).
 
-3. Asteroids should move along an initially random velocity vector.  If they move off-screen, they should wrap to the opposite side of the screen (10 points).
+3. Asteroids should move along an initially random velocity vector.  If they move off-screen, they should wrap to the opposite side of the screen (10 points).Done
 
 4. Asteroids that collide with one another should break away from each other according to Newtonian mechanics while playing a sound effect.  Asteroids should be of different masses, determined randomly when created (20 points).
 
 5. Asteroids destroy the player's ship when collided with, playing a sound effect.  The player begins with three lives, which are displayed in a GUI (10 points).
 
-6. The player may shoot lasers, which travel across the screen and disappear when they cross the edge.  They also play a sound effect when fired (10 points).
+6. The player may shoot lasers, which travel across the screen and disappear when they cross the edge.  They also play a sound effect when fired (10 points).Done
 
 7. A laser will break an asteroid into two or more smaller pieces when it hits them.  These pieces have part of the original asteroid's mass, and velocities that move away from each other. If an asteroid is small enough, it is simply destroyed. (20 points).
 
