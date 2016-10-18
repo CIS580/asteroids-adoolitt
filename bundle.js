@@ -12,20 +12,20 @@ var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
 var player = new Player({x: canvas.width/2, y: canvas.height/2}, canvas);
 var listOfAsterods = [];
-
-var lazer;
+var ListsOfLazers = []
 var hasFired = false;
 var lives = 3;
 var score = 0;
 var level = 1;
 var maxAsteroids = 10;
+var count = 0;
 console.log(maxAsteroids);
 for(var i = 0 ; i < maxAsteroids; i++)
 {
   var mass = Math.floor(Math.random() * 100 + 50);
   var ang = Math.floor(Math.random() * 100 + 1);
   console.log("We made it");
-  listOfAsterods.push(new Astroid({x: 100  * i, y:100 * i}, canvas, mass, ang));
+  listOfAsterods.push(new Astroid({x: 100  * i, y:100 * i}, canvas, mass, ang, 64, 64,'assets/big_astroid.png'));
 }
 
 listOfAsterods.forEach(function(astroid){
@@ -57,78 +57,67 @@ masterLoop(performance.now());
  * @param {DOMHighResTimeStamp} elapsedTime indicates
  * the number of milliseconds passed since the last frame.
  */
-function update(elapsedTime) {
-  player.update(elapsedTime, canvas);
-  listOfAsterods.forEach(function(asteroid){asteroid.update(elapsedTime);});
+function update(elapsedTime)
+{
+  player.update(elapsedTime);
+  // TODO: Update the game objects
+  listOfAsterods.sort(function(a,b){return a.position.x - b.position.x});
+  console.log(player.fired);
   if(player.fired)
   {
-    lazer = new Lazer({x: player.position.x , y: player.position.y}, canvas, {x: player.velocity.x, y: player.velocity.y}, player.angle);
-    firedLazer.play();
-    hasFired = true
+    console.log("Should fire.")
+    hasFired = true;
   }
-  if(hasFired == true)
-  {
-    lazer.update(elapsedTime);
+  if(hasFired == true && player.state != "dead")
+   {
+     console.log("We have fired")
+        ListsOfLazers.push(new Lazer(
+          {
+            x:player.position.x,
+            y:player.position.y
+          },
+          canvas, player.velocity, player.angle
+        ));
+        firedLazer.play();
+        hasFired = false;
   }
-  // TODO: Update the game objects
-  // now that all our asteroids  have moved.
-  listOfAsterods.sort(function(a,b){return a.position.x - b.position.x});
+  //check for asteroid collisions
+  asteroidCollission();
+  if(player.state != "dead") {
+    playerCollision();
+  }
+  lazerCollsion();
+  listOfAsterods.forEach(function(asteroid){asteroid.update();});
+  ListsOfLazers.forEach(function(lazer){lazer.update();});
+}
 
-  // The active list will hold all balls
-  // we are currently considering for collisions
+function asteroidCollission ()
+{
   var active = [];
-
-  // The potentially colliding list will hold
-  // all pairs of balls that overlap in the x-axis,
-  // and therefore potentially collide
   var potentiallyColliding = [];
 
   // For each ball in the axis list, we consider it
   // in order
   listOfAsterods.forEach(function(astroid, aindex){
-    // remove balls from the active list that are
-    // too far away from our current ball to collide
-    // The Array.prototype.filter() method will return
-    // an array containing only elements for which the
-    // provided function's return value was true -
-    // in this case, all balls that are closer than 30
-    // units to our current ball on the x-axis
     active = active.filter(function(newAstroid){
-      return astroid.position.x - newAstroid.position.x  < 30;
+      return astroid.position.x - newAstroid.position.x  < (astroid.radius + newAstroid.raduis);
     });
-    // Since only balls within colliding distance of
-    // our current ball are left in the active list,
-    // we pair them with the current ball and add
-    // them to the potentiallyColliding array.
+
     active.forEach(function(newAstroid, bindex){
       potentiallyColliding.push({a: newAstroid, b: astroid});
     });
-    // Finally, we add our current ball to the active
-    // array to consider it in the next pass down the
-    // axisList
     active.push(astroid);
 });
 
-// At this point we have a potentaillyColliding array
-  // containing all pairs overlapping in the x-axis.  Now
-  // we want to check for REAL collisions between these pairs.
-  // We'll store those in our collisions array.
   var collisions = [];
   potentiallyColliding.forEach(function(pair){
-    // Calculate the distance between balls; we'll keep
-    // this as the squared distance, as we just need to
-    // compare it to a distance equal to the radius of
-    // both balls summed.  Squaring this second value
-    // is less computationally expensive than taking
-    // the square root to get the actual distance.
-    // In fact, we can cheat a bit more and use a constant
-    // for the sum of radii, as we know the radius of our
-    // balls won't change.
     var distSquared =
       Math.pow(pair.a.position.x - pair.b.position.x, 2) +
       Math.pow(pair.a.position.y - pair.b.position.y, 2);
     // (15 + 15)^2 = 900 -> sum of two balls' raidius squared
-    if(distSquared < 4096) {
+    var sumRadiusSqueared = (pair.a.radius + pair.b.raidus) * (pair.a.radius + pair.b.raidus);
+    console.log(sumRadiusSqueared);
+    if(distSquared < sumRadiusSqueared) {
       // Color the collision pair for visual debugging
       pair.a.color = 'red';
       pair.b.color = 'green';
@@ -143,8 +132,8 @@ function update(elapsedTime) {
       x: pair.a.position.x - pair.b.position.x,
       y: pair.a.position.y - pair.b.position.y
     }
-
-    var overlap = 69 - Vector.magnitude(collisionNormal);
+    var totalRadius = pair.a.radius + pair.b.radius;
+    var overlap = totalRadius + 6 - Vector.magnitude(collisionNormal);
     var collisionNormal = Vector.normalize(collisionNormal);
     pair.a.position.x += collisionNormal.x * overlap / 2;
     pair.a.position.y += collisionNormal.y * overlap / 2;
@@ -155,9 +144,13 @@ function update(elapsedTime) {
     var a = Vector.rotate(pair.a.velocity, angle);
     var b = Vector.rotate(pair.b.velocity, angle);
 
-    var temp = a.x;
-    a.x = b.x;
-    b.x = temp;
+    //V1 = U1(m1-m2)/(m1 + m2) + U2 (2m2)/m1 + m2
+    //v2 = U2(m2-m1)/(m2 + m1) + U1 (2m1)/m2 + m1
+    var aPrevious = a.x;
+    var bPrevious = b.x;
+
+    a.x = (aPrevious * (pair.a.mass - pair.b.mass) + 2 * pair.b.mass * bPrevious)/(pair.a.mass + pair.b.mass);
+    b.x = (bPrevious * (pair.b.mass - pair.a.mass) + 2 * pair.a.mass * aPrevious)/(pair.a.mass + pair.b.mass);
 
     a = Vector.rotate(a, -angle);
     b = Vector.rotate(b, -angle);
@@ -167,10 +160,91 @@ function update(elapsedTime) {
     pair.b.velocity.x = b.x;
     pair.b.velocity.y = b.y;
 
-    //asteroidCollsion.play()
-});
+    asteroidCollision.play()
+  });
 }
 
+//check to see if player hit an asteroid
+function playerCollision()
+{
+  for(var i=0; i < listOfAsterods.length; i++)
+  {
+    var distSquared =
+    Math.pow(player.position.x - listOfAsterods[i].position.x, 2) +
+    Math.pow(player.position.y - listOfAsterods[i].position.y, 2);
+    if(distSquared < Math.pow(10+listOfAsterods[i].radius, 2))
+    {
+      player.state = "dead";
+      explosion.play();
+    }
+  }
+}
+
+function lazerCollsion(){
+  for(var i = 0; i < listOfAsterods.length; i++){
+    for(var j = 0; j < ListsOfLazers.length; j++){
+      var distSquared =
+        Math.pow((ListsOfLazers[j].position.x) - (listOfAsterods[i].position.x + listOfAsterods[i].radius), 2) +
+        Math.pow((ListsOfLazers[j].position.y) - (listOfAsterods[i].position.y + listOfAsterods[i].radius), 2);
+
+      if(distSquared < Math.pow(listOfAsterods[i].radius, 2))
+      {
+        // Laser struck asteroid
+        if(listOfAsterods[i].width > 5){
+          var angle = Math.atan(listOfAsterods[i].velocity.y/listOfAsterods[i].velocity.x);
+          var velocity1 = {x: Math.cos(angle + Math.PI/4)*1.5, y: Math.sin(angle + Math.PI/4)*1.5};
+          var velocity2 = {x: Math.cos(angle - Math.PI/4)*1.5, y: Math.sin(angle - Math.PI/4)*1.5};
+
+          var asteroid1 = new Astroid(
+            {
+              x:listOfAsterods[i].x,
+              y:listOfAsterods[i].y
+            },
+            canvas, 32, 32, 'assets/broken_asteriod.png'
+          );
+          asteroid1.setVelocity(velocity1);
+          asteroid1.mass = listOfAsterods[i].mass/2;
+          listOfAsterods.push(asteroid1);
+
+          var asteroid2 =  new Astroid(
+            {
+              x:listOfAsterods[i].x,
+              y:listOfAsterods[i].y
+            },
+            canvas, 32, 32, 'assets/broken_asteriod.png'
+          );
+          asteroid2.setVelocity(velocity2);
+          asteroid2.mass = listOfAsterods[i].mass/2;
+          listOfAsterods.push(asteroid2);
+        }
+        console.log(listOfAsterods.length);
+        if(listOfAsterods.length == 1)
+        {
+          listOfAsterods.splice(i,1);
+          level++;
+          for(i=0; i < 12; i++)
+           {
+              var newMass = Math.floor(Math.random() * 100 + 50);
+              var newAng = Math.floor(Math.random() * 100 + 1);
+             listOfAsterods.push(new Asteroid(
+               {
+                   x:Math.floor(Math.random() * canvas.width),
+                   y:Math.floor(Math.random() * canvas.height)
+              },
+                 canvas,newMass, newAng, 65,65, 'assets/big_astroid.png'
+            ));
+        }
+      }
+      else
+      {
+        asteroids.splice(i,1);
+      }
+      score += 10;
+      break;
+      }
+    }
+  }
+}
 /**
   * @function render
   * Renders the current game state into a back buffer.
@@ -181,16 +255,36 @@ function update(elapsedTime) {
 function render(elapsedTime, ctx) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  player.render(elapsedTime, ctx);
+  listOfAsterods.forEach(function(asteroid){asteroid.render(elapsedTime, ctx);});
+  if(ListsOfLazers != undefined)
+  {
+    ListsOfLazers.forEach(function(lazer){lazer.render(elapsedTime, ctx);});
+  }
+
+  if(player.state == "dead")
+   {
+    if(count == 0)
+     {
+      time = elapsedTime;
+      count++;
+      lives--;
+    }
+    else
+    {
+      time+= elapsedTime;
+      if(time > 1000)
+      {
+        time = 0;
+        count = 0;
+        player.state = "idle";
+      }
+    }
+  }
   ctx.fillStyle = "white";
   ctx.fillText("Score:" + score, canvas.width - 80, 10);
   ctx.fillText("Level:" + level, 10, 10);
   ctx.fillText("Lives:" + lives, canvas.width / 2, 10);
-  player.render(elapsedTime, ctx);
-  listOfAsterods.forEach(function(asteroid){asteroid.render(elapsedTime, ctx);});
-  if(hasFired == true)
-  {
-    lazer.render(elapsedTime,ctx);
-  }
 }
 
 },{"./astroid.js":2,"./game.js":3,"./lazer.js":4,"./player.js":5,"./vector":6}],2:[function(require,module,exports){
@@ -208,11 +302,11 @@ module.exports = exports = Astroid;
  * Creates a new player object
  * @param {Postition} position object specifying an x and y
  */
-function Astroid(position, canvas, mass, angle) {
+function Astroid(position, canvas, mass, angle, width, height, image) {
   this.worldWidth = canvas.width;
   this.worldHeight = canvas.height;
   this.spritesheet  = new Image();
-  this.spritesheet.src = encodeURI('assets/big_astroid.png');
+  this.spritesheet.src = encodeURI(image);
   this.position = {
     x: position.x,
     y: position.y
@@ -222,9 +316,9 @@ function Astroid(position, canvas, mass, angle) {
     y: 0
   }
   this.angle = angle;
-  this.radius  = 32;
-  this.height = 64;
-  this.width = 64;
+  this.radius  = width / 2;
+  this.height = height;
+  this.width = width;
   this.broken = false;
   this.mass = mass;
 }
@@ -238,6 +332,12 @@ Astroid.prototype.setAngularVelocity = function()
   }
   this.velocity.x -= acceleration.x * 1;
   this.velocity.y -= acceleration.y * 1;
+}
+
+Astroid.prototype.setVelocity = function(v)
+{
+  this.velocity.x = v.x;
+  this.velocity.y = v.y
 }
 
 /**
@@ -384,18 +484,18 @@ Lazer.prototype.update = function(time) {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Lazer.prototype.render = function(time, ctx) {
-  //ctx.save();
-  //ctx.translate(this.position.x, this.position.y);
-  //ctx.rotate(-this.angle);
+  ctx.save();
+  ctx.translate(this.position.x, this.position.y);
+  ctx.rotate(-this.angle);
   ctx.drawImage(
         // image
         this.spritesheet,
         // source rectangle
         0, 0, this.width, this.height,
         // destination rectangle
-        this.position.x, this.position.y, this.width, this.height
+        this.width / 2, this.height/2, this.width/2, this.height/2
       );
-  //ctx.restore();
+  ctx.restore();
   }
 
 },{}],5:[function(require,module,exports){

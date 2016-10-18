@@ -52,16 +52,16 @@ Lazer.prototype.update = function(time) {
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Lazer.prototype.render = function(time, ctx) {
-  //ctx.save();
-  //ctx.translate(this.position.x, this.position.y);
-  //ctx.rotate(-this.angle);
+  ctx.save();
+  ctx.translate(this.position.x, this.position.y);
+  ctx.rotate(-this.angle);
   ctx.drawImage(
         // image
         this.spritesheet,
         // source rectangle
         0, 0, this.width, this.height,
         // destination rectangle
-        this.position.x, this.position.y, this.width, this.height
+        this.width / 2, this.height/2, this.width/2, this.height/2
       );
-  //ctx.restore();
+  ctx.restore();
   }

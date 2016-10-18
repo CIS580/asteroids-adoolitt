@@ -12,11 +12,11 @@ module.exports = exports = Astroid;
  * Creates a new player object
  * @param {Postition} position object specifying an x and y
  */
-function Astroid(position, canvas, mass, angle) {
+function Astroid(position, canvas, mass, angle, width, height, image) {
   this.worldWidth = canvas.width;
   this.worldHeight = canvas.height;
   this.spritesheet  = new Image();
-  this.spritesheet.src = encodeURI('assets/big_astroid.png');
+  this.spritesheet.src = encodeURI(image);
   this.position = {
     x: position.x,
     y: position.y
@@ -26,9 +26,9 @@ function Astroid(position, canvas, mass, angle) {
     y: 0
   }
   this.angle = angle;
-  this.radius  = 32;
-  this.height = 64;
-  this.width = 64;
+  this.radius  = width / 2;
+  this.height = height;
+  this.width = width;
   this.broken = false;
   this.mass = mass;
 }
@@ -42,6 +42,12 @@ Astroid.prototype.setAngularVelocity = function()
   }
   this.velocity.x -= acceleration.x * 1;
   this.velocity.y -= acceleration.y * 1;
+}
+
+Astroid.prototype.setVelocity = function(v)
+{
+  this.velocity.x = v.x;
+  this.velocity.y = v.y
 }
 
 /**
