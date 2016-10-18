@@ -189,26 +189,25 @@ function lazerCollsion(){
       {
         console.log("We are in the lazerCollsion and have stuck a asteroid");
         // Laser struck asteroid
-        if(listOfAsterods[i].width > 5){
+        if(listOfAsterods[i].width > 33){
           var angle = Math.atan(listOfAsterods[i].velocity.y/listOfAsterods[i].velocity.x);
           var velocity1 = {x: Math.cos(angle + Math.PI/4)*1.5, y: Math.sin(angle + Math.PI/4)*1.5};
           var velocity2 = {x: Math.cos(angle - Math.PI/4)*1.5, y: Math.sin(angle - Math.PI/4)*1.5};
 
           var asteroid1 = new Astroid(
             {
-              x:listOfAsterods[i].x + 32,
-              y:listOfAsterods[i].y + 32
+              x:listOfAsterods[i].position.x + 32,
+              y:listOfAsterods[i].position.y + 32
             },
             canvas, 32, 32, 'assets/broken_asteriod.png'
           );
           asteroid1.setVelocity(velocity1);
           asteroid1.mass = listOfAsterods[i].mass/2;
           listOfAsterods.push(asteroid1);
-          console.log("We have created a new asteroid");
           var asteroid2 =  new Astroid(
             {
-              x:listOfAsterods[i].x,
-              y:listOfAsterods[i].y
+              x:listOfAsterods[i].position.x,
+              y:listOfAsterods[i].position.y
             },
             canvas, 32, 32, 'assets/broken_asteriod.png'
           );
