@@ -31,6 +31,7 @@ function Astroid(position, canvas, mass, angle, width, height, image) {
   this.width = width;
   this.broken = false;
   this.mass = mass;
+  this.color = 'gray';
 }
 
 Astroid.prototype.setAngularVelocity = function()
@@ -77,6 +78,10 @@ Astroid.prototype.render = function(time, ctx) {
         // source rectangle
         0, 0, this.width, this.height,
         // destination rectangle
-        this.position.x, this.position.y, this.width, this.height
+        this.position.x - (this.width /2), this.position.y - (this.height / 2), this.width, this.height
       );
+      ctx.beginPath();
+      ctx.strokeStyle = this.color;
+      ctx.arc(this.position.x,this.position.y,this.radius,0,2* Math.PI);
+      ctx.stroke();
   }

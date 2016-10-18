@@ -19,12 +19,12 @@ var score = 0;
 var level = 1;
 var maxAsteroids = 10;
 var count = 0;
+var shotCount = 0;
 console.log(maxAsteroids);
 for(var i = 0 ; i < maxAsteroids; i++)
 {
   var mass = Math.floor(Math.random() * 100 + 50);
   var ang = Math.floor(Math.random() * 100 + 1);
-  console.log("We made it");
   listOfAsterods.push(new Astroid({x: 100  * i, y:100 * i}, canvas, mass, ang, 64, 64,'assets/big_astroid.png'));
 }
 
@@ -62,15 +62,13 @@ function update(elapsedTime)
   player.update(elapsedTime);
   // TODO: Update the game objects
   listOfAsterods.sort(function(a,b){return a.position.x - b.position.x});
-  console.log(player.fired);
   if(player.fired)
   {
-    console.log("Should fire.")
     hasFired = true;
+    shotCount++;
   }
-  if(hasFired == true && player.state != "dead")
+  if(hasFired == true && player.state != "dead" && shotCount > 3 )
    {
-     console.log("We have fired")
         ListsOfLazers.push(new Lazer(
           {
             x:player.position.x,
@@ -80,6 +78,7 @@ function update(elapsedTime)
         ));
         firedLazer.play();
         hasFired = false;
+        shotCount = 0;
   }
   //check for asteroid collisions
   asteroidCollission();
@@ -100,14 +99,14 @@ function asteroidCollission ()
   // in order
   listOfAsterods.forEach(function(astroid, aindex){
     active = active.filter(function(newAstroid){
-      return astroid.position.x - newAstroid.position.x  < (astroid.radius + newAstroid.raduis);
+      return astroid.position.x - newAstroid.position.x  < (astroid.radius + newAstroid.radius);
     });
 
     active.forEach(function(newAstroid, bindex){
       potentiallyColliding.push({a: newAstroid, b: astroid});
     });
     active.push(astroid);
-});
+  });
 
   var collisions = [];
   potentiallyColliding.forEach(function(pair){
@@ -115,9 +114,10 @@ function asteroidCollission ()
       Math.pow(pair.a.position.x - pair.b.position.x, 2) +
       Math.pow(pair.a.position.y - pair.b.position.y, 2);
     // (15 + 15)^2 = 900 -> sum of two balls' raidius squared
-    var sumRadiusSqueared = (pair.a.radius + pair.b.raidus) * (pair.a.radius + pair.b.raidus);
-    console.log(sumRadiusSqueared);
-    if(distSquared < sumRadiusSqueared) {
+    var sumRadiusSqueared = (pair.a.radius * pair.a.radius) + (pair.b.radius * pair.b.radius);
+    if(distSquared < sumRadiusSqueared)
+  {
+
       // Color the collision pair for visual debugging
       pair.a.color = 'red';
       pair.b.color = 'green';
@@ -133,7 +133,7 @@ function asteroidCollission ()
       y: pair.a.position.y - pair.b.position.y
     }
     var totalRadius = pair.a.radius + pair.b.radius;
-    var overlap = totalRadius + 6 - Vector.magnitude(collisionNormal);
+    var overlap = totalRadius - Vector.magnitude(collisionNormal);
     var collisionNormal = Vector.normalize(collisionNormal);
     pair.a.position.x += collisionNormal.x * overlap / 2;
     pair.a.position.y += collisionNormal.y * overlap / 2;
@@ -159,8 +159,7 @@ function asteroidCollission ()
     pair.a.velocity.y = a.y;
     pair.b.velocity.x = b.x;
     pair.b.velocity.y = b.y;
-
-    asteroidCollision.play()
+    asteroidCollsion.play()
   });
 }
 
@@ -189,6 +188,7 @@ function lazerCollsion(){
 
       if(distSquared < Math.pow(listOfAsterods[i].radius, 2))
       {
+        console.log("We are in the lazerCollsion and have stuck a asteroid");
         // Laser struck asteroid
         if(listOfAsterods[i].width > 5){
           var angle = Math.atan(listOfAsterods[i].velocity.y/listOfAsterods[i].velocity.x);
@@ -197,15 +197,15 @@ function lazerCollsion(){
 
           var asteroid1 = new Astroid(
             {
-              x:listOfAsterods[i].x,
-              y:listOfAsterods[i].y
+              x:listOfAsterods[i].x + 32,
+              y:listOfAsterods[i].y + 32
             },
             canvas, 32, 32, 'assets/broken_asteriod.png'
           );
           asteroid1.setVelocity(velocity1);
           asteroid1.mass = listOfAsterods[i].mass/2;
           listOfAsterods.push(asteroid1);
-
+          console.log("We have created a new asteroid");
           var asteroid2 =  new Astroid(
             {
               x:listOfAsterods[i].x,
@@ -222,7 +222,8 @@ function lazerCollsion(){
         {
           listOfAsterods.splice(i,1);
           level++;
-          for(i=0; i < 12; i++)
+          maxAsteroids++;
+          for(i=0; i < maxAsteroids; i++)
            {
               var newMass = Math.floor(Math.random() * 100 + 50);
               var newAng = Math.floor(Math.random() * 100 + 1);
@@ -237,7 +238,9 @@ function lazerCollsion(){
       }
       else
       {
-        asteroids.splice(i,1);
+        console.log("We are in the removing from array for asteroids and lazer.")
+        listOfAsterods.splice(i,1);
+        ListsOfLazers.splice(j,1);
       }
       score += 10;
       break;
@@ -321,6 +324,7 @@ function Astroid(position, canvas, mass, angle, width, height, image) {
   this.width = width;
   this.broken = false;
   this.mass = mass;
+  this.color = 'gray';
 }
 
 Astroid.prototype.setAngularVelocity = function()
@@ -367,8 +371,12 @@ Astroid.prototype.render = function(time, ctx) {
         // source rectangle
         0, 0, this.width, this.height,
         // destination rectangle
-        this.position.x, this.position.y, this.width, this.height
+        this.position.x - (this.width /2), this.position.y - (this.height / 2), this.width, this.height
       );
+      ctx.beginPath();
+      ctx.strokeStyle = this.color;
+      ctx.arc(this.position.x,this.position.y,this.radius,0,2* Math.PI);
+      ctx.stroke();
   }
 
 },{}],3:[function(require,module,exports){
@@ -534,7 +542,6 @@ function Player(position, canvas) {
 
   var self = this;
   window.onkeydown = function(event) {
-    console.log(event.key);
     switch(event.key) {
       case 'ArrowUp': // up
       case 'w':
