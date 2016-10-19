@@ -46,7 +46,9 @@ var masterLoop = function(timestamp) {
   game.loop(timestamp);
   window.requestAnimationFrame(masterLoop);
 }
-masterLoop(performance.now());
+if(lives >= 0) {
+  masterLoop(performance.now());
+}
 
 
 /**
@@ -182,11 +184,15 @@ function playerCollision()
 function lazerCollsion(){
   for(var i = 0; i < listOfAsterods.length; i++){
     for(var j = 0; j < ListsOfLazers.length; j++){
-      var distSquared =
-        Math.pow((ListsOfLazers[j].position.x) - (listOfAsterods[i].position.x + listOfAsterods[i].radius), 2) +
-        Math.pow((ListsOfLazers[j].position.y) - (listOfAsterods[i].position.y + listOfAsterods[i].radius), 2);
+      //var distSquared =
+        //Math.pow(pair.a.position.x - pair.b.position.x, 2) +
+        //Math.pow(pair.a.position.y - pair.b.position.y, 2);
 
-      if(distSquared < Math.pow(listOfAsterods[i].radius, 2))
+      var distSquared =
+        Math.pow(ListsOfLazers[j].position.x - listOfAsterods[i].position.x , 2) +
+        Math.pow(ListsOfLazers[j].position.y - listOfAsterods[i].position.y, 2);
+      var sumofRadiusSquared = listOfAsterods[i].radius * listOfAsterods[i].radius + 225 ;
+      if(distSquared < sumofRadiusSquared)
       {
         console.log("We are in the lazerCollsion and have stuck a asteroid");
         // Laser struck asteroid
@@ -204,7 +210,6 @@ function lazerCollsion(){
           );
           asteroid1.setVelocity(velocity1);
           listOfAsterods.push(asteroid1);
-          console.log(listOfAsterods[listOfAsterods.length-1]);
           var asteroid2 =  new Astroid(
             {
               x:listOfAsterods[i].position.x,
@@ -215,11 +220,11 @@ function lazerCollsion(){
           asteroid2.setVelocity(velocity2);
           asteroid2.mass = listOfAsterods[i].mass/2;
           listOfAsterods.push(asteroid2);
-          console.log(listOfAsterods[listOfAsterods.length-1]);
         }
         console.log(listOfAsterods.length);
         if(listOfAsterods.length == 1)
         {
+          console.log("Got in the new game condition.");
           listOfAsterods.splice(i,1);
           level++;
           maxAsteroids++;
@@ -227,14 +232,20 @@ function lazerCollsion(){
            {
               var newMass = Math.floor(Math.random() * 100 + 50);
               var newAng = Math.floor(Math.random() * 100 + 1);
-             listOfAsterods.push(new Asteroid(
+              console.log("Creating new asteroids");
+             listOfAsterods.push(new Astroid(
                {
                    x:Math.floor(Math.random() * canvas.width),
                    y:Math.floor(Math.random() * canvas.height)
               },
                  canvas,newMass, newAng, 64,64, 'assets/big_astroid.png'
             ));
+              console.log(listOfAsterods[listOfAsterods.length-1]);
         }
+
+        listOfAsterods.forEach(function(astroid){
+          astroid.setAngularVelocity();
+        });
       }
       else
       {
@@ -258,6 +269,38 @@ function lazerCollsion(){
 function render(elapsedTime, ctx) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if(lives == 3)
+  {
+    var spritesheet  = new Image();
+    spritesheet.src = encodeURI('assets/threeLives.png');
+    ctx.drawImage(
+          spritesheet,
+          canvas.width / 2 ,
+          10, 160, 30
+        );
+  }
+  else if(lives == 2)
+  {
+    var spritesheet  = new Image();
+    spritesheet.src = encodeURI('assets/TwoLives.png');
+    ctx.drawImage(
+          spritesheet,
+          canvas.width / 2 ,
+          10, 160, 30
+        );
+  }
+  else if(lives == 1)
+  {
+    var spritesheet  = new Image();
+    spritesheet.src = encodeURI('assets/OneLives.png');
+    ctx.drawImage(
+          spritesheet,
+          canvas.width / 2 ,
+          10, 160, 30
+        );
+  }
+  else {
+  }
   player.render(elapsedTime, ctx);
   listOfAsterods.forEach(function(asteroid){asteroid.render(elapsedTime, ctx);});
   if(ListsOfLazers != undefined)
@@ -287,7 +330,10 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "white";
   ctx.fillText("Score:" + score, canvas.width - 80, 10);
   ctx.fillText("Level:" + level, 10, 10);
-  ctx.fillText("Lives:" + lives, canvas.width / 2, 10);
+  if(lives < 0)
+  {
+    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2);
+  }
 }
 
 },{"./astroid.js":2,"./game.js":3,"./lazer.js":4,"./player.js":5,"./vector":6}],2:[function(require,module,exports){
@@ -539,6 +585,7 @@ function Player(position, canvas) {
   this.steerLeft = false;
   this.steerRight = false;
   this.fired = false;
+  this.teleport = false;
 
   var self = this;
   window.onkeydown = function(event) {
@@ -582,7 +629,7 @@ function Player(position, canvas) {
         self.fired = false;
         break;
     case 't':
-        self.teleport = true;
+        self.teleport = false;
         break;
     }
   }
@@ -595,11 +642,14 @@ function Player(position, canvas) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function(time, canvas) {
-
+  console.log(this.teleport);
   if(this.teleport)
   {
-    var newX = Math.floor(Math.random() * canvas.width + 1);
-    var newY = Math.floor(Math.random() * canvas.height + 1);
+    console.log("Inside the if statement.")
+    var newX =  Math.floor(Math.random() * 760 + 1);
+    console.log(newX);
+    var newY =  Math.floor(Math.random() * 480 + 1);
+    console.log(newY);
     this.position = {x:newX, y:newY};
     this.teleport = false;
   }

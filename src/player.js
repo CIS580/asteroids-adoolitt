@@ -30,6 +30,7 @@ function Player(position, canvas) {
   this.steerLeft = false;
   this.steerRight = false;
   this.fired = false;
+  this.teleport = false;
 
   var self = this;
   window.onkeydown = function(event) {
@@ -73,7 +74,7 @@ function Player(position, canvas) {
         self.fired = false;
         break;
     case 't':
-        self.teleport = true;
+        self.teleport = false;
         break;
     }
   }
@@ -86,11 +87,12 @@ function Player(position, canvas) {
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
 Player.prototype.update = function(time, canvas) {
-
+  console.log(this.teleport);
   if(this.teleport)
   {
-    var newX = Math.floor(Math.random() * canvas.width + 1);
-    var newY = Math.floor(Math.random() * canvas.height + 1);
+    console.log("Inside the if statement.")
+    var newX =  Math.floor(Math.random() * 760 + 1);
+    var newY =  Math.floor(Math.random() * 480 + 1);
     this.position = {x:newX, y:newY};
     this.teleport = false;
   }
