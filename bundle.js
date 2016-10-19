@@ -200,21 +200,22 @@ function lazerCollsion(){
               x:listOfAsterods[i].position.x + 32,
               y:listOfAsterods[i].position.y + 32
             },
-            canvas, 32, 32, 'assets/broken_asteriod.png'
+            canvas, (listOfAsterods[i].mass/2), listOfAsterods[i].angle, 32, 32, 'assets/broken_asteriod.png'
           );
           asteroid1.setVelocity(velocity1);
-          asteroid1.mass = listOfAsterods[i].mass/2;
           listOfAsterods.push(asteroid1);
+          console.log(listOfAsterods[listOfAsterods.length-1]);
           var asteroid2 =  new Astroid(
             {
               x:listOfAsterods[i].position.x,
               y:listOfAsterods[i].position.y
             },
-            canvas, 32, 32, 'assets/broken_asteriod.png'
+            canvas, (listOfAsterods[i].mass/2), listOfAsterods[i].angle, 32, 32, 'assets/broken_asteriod.png'
           );
           asteroid2.setVelocity(velocity2);
           asteroid2.mass = listOfAsterods[i].mass/2;
           listOfAsterods.push(asteroid2);
+          console.log(listOfAsterods[listOfAsterods.length-1]);
         }
         console.log(listOfAsterods.length);
         if(listOfAsterods.length == 1)
@@ -231,7 +232,7 @@ function lazerCollsion(){
                    x:Math.floor(Math.random() * canvas.width),
                    y:Math.floor(Math.random() * canvas.height)
               },
-                 canvas,newMass, newAng, 65,65, 'assets/big_astroid.png'
+                 canvas,newMass, newAng, 64,64, 'assets/big_astroid.png'
             ));
         }
       }
